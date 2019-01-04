@@ -11,9 +11,9 @@ const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const isBuild = process.argv.slice(-1)[0]==='---build';
 
-
-module.exports = {
+var config = {
 	entry: {
 		'ycc-charts':'./src/index.js',
 		'line-demo':'./demo/line/line.js'
@@ -29,22 +29,25 @@ module.exports = {
 	devtool:"source-map",
 	
 	devServer:{
+		// 根目录dist
 		contentBase: path.join(__dirname, "dist"),
 		port: 9000,
 		open:true,
-		openPage:'./demo/line'
+		hot:true,
+		//openPage:'./'
 	},
-	//watch: true,
 	plugins: [
 		new CleanWebpackPlugin(['dist']),
 		new HtmlWebpackPlugin({
-			title: '示例-折线图',
-			filename:'./demo/line/index.html',
+			title: '示例-折线图2222',
+			filename:'demo-line.html',
 			chunks:['line-demo']
 		}),
-		//new webpack.HotModuleReplacementPlugin()
+		new webpack.HotModuleReplacementPlugin()
 	],
-
-	
-	
 };
+
+if(!isBuild){
+	config.plugins.shift();
+}
+module.exports = config;

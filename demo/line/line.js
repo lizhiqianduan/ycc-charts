@@ -9,4 +9,4 @@
 var YccChart = require('../../src/index');
 
 
-console.log(444,YccChart);
+console.log(222,YccChart);

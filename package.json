@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack",
-    "start": "webpack-dev-server"
+    "build": "webpack ---build",
+    "start": "webpack && webpack-dev-server"
   },
   "author": "http://www.lizhiqianduan.com",
   "license": "ISC",
