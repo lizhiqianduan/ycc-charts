@@ -47,10 +47,17 @@ function Axis(option,layer,chart) {
 	this.show 				= option.show;
 	
 	/**
-	 * 刻度值列表
+	 * 刻度文字列表
 	 * @type {number[]|string[]}
 	 */
 	this.data				= option.data || [];
+	
+	/**
+	 * 每个数据在轴线上的位置
+	 * @type {Array}
+	 * @private
+	 */
+	this._dataPos			= [];
 	
 	/**
 	 * 默认的刻度值列表长度，初始时在data长度为0时使用
@@ -85,8 +92,18 @@ Axis.prototype.init = function () {
 
 Axis.prototype.render = function () {
 	console.log(this.layer,222);
-	this.layer.addUI(new Ycc.UI.Line({
+	
+	var line = new Ycc.UI.Line({
 		start:this.startDot,
 		end:new Ycc.Math.Dot(this._chart.width,this.startDot.y)
-	}))
+	});
+	this.layer.addUI(line);
+	
+	for(var i=0;i<this.data.length;i++){
+		var x = this.data[i];
+		line.addChild(new Ycc.UI.Line({
+			start:new Ycc.Math.Dot(x,0),
+			end:new Ycc.Math.Dot(x,10)
+		}));
+	}
 };
