@@ -38,7 +38,7 @@ module.exports = {
 	plugins: [
 		new CleanWebpackPlugin(['dist']),
 		new HtmlWebpackPlugin({
-			title: '折线图',
+			title: '示例-折线图',
 			filename:'./demo/line/index.html',
 			chunks:['line-demo']
 		}),
