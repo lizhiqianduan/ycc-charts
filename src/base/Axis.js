@@ -8,8 +8,22 @@
 
 var Ycc = require('ycc-engine');
 
-function Axis(option,chart) {
+module.exports = exports = Axis;
+
+/**
+ *
+ * @param option
+ * @param layer
+ * @param chart
+ * @constructor
+ */
+function Axis(option,layer,chart) {
 	option = option || {};
+	
+	/**
+	 * 轴线所在的图层
+	 */
+	this.layer = layer;
 	
 	/**
 	 * 图表实例的引用
@@ -48,7 +62,7 @@ function Axis(option,chart) {
 	 * 坐标轴的起点
 	 * @type {Ycc.Math.Dot}
 	 */
-	this.startDot = null;
+	this.startDot = new Ycc.Math.Dot(20,20);
 	
 	this.init();
 }
@@ -69,6 +83,10 @@ Axis.prototype.init = function () {
 	}
 };
 
-Axis.prototype.xRender = function () {
-
-}
+Axis.prototype.render = function () {
+	console.log(this.layer,222);
+	this.layer.addUI(new Ycc.UI.Line({
+		start:this.startDot,
+		end:new Ycc.Math.Dot(this._chart.width,this.startDot.y)
+	}))
+};
