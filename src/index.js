@@ -8,10 +8,7 @@
 var Ycc = require('ycc-engine');
 var Axis = require('./base/Axis');
 
-
-
-window.Ycc = Ycc;
-window.Ycc.Charts = YccCharts;
+window.YccCharts = YccCharts;
 
 /**
  *

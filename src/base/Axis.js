@@ -6,6 +6,8 @@
  */
 
 
+var Ycc = require('ycc-engine');
+
 function Axis(option,chart) {
 	option = option || {};
 	
@@ -66,3 +68,7 @@ Axis.prototype.init = function () {
 		}
 	}
 };
+
+Axis.prototype.xRender = function () {
+
+}
