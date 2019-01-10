@@ -21,6 +21,12 @@ module.exports = exports = YccCharts;
 function YccCharts(option) {
 	
 	/**
+	 * 配置项
+	 * @type {Object}
+	 */
+	this.option = option;
+	
+	/**
 	 * 图表宽
 	 * @type {number}
 	 */
@@ -34,15 +40,17 @@ function YccCharts(option) {
 	
 	/**
 	 * x坐标对象
+	 * 初始时会重载对象的属性
 	 * @type {null|Axis}
 	 */
-	this.xAxis 		= null;
+	this.xAxis 		= option.xAxis;
 	
 	/**
 	 * y坐标对象
+	 * 初始时会重载对象的属性
 	 * @type {null|Axis}
 	 */
-	this.yAxis 		= null;
+	this.yAxis 		= option.yAxis;
 	
 	/**
 	 * 极坐标
@@ -80,25 +88,22 @@ function YccCharts(option) {
  * 初始化
  */
 YccCharts.prototype.init = function () {
-	var canvas = document.createElement('canvas');
-	canvas.width = this.width;
-	canvas.height = this.height;
-	var ycc = new Ycc().bindCanvas(canvas);
-	var layer = ycc.layerManager.newLayer({name:"坐标轴"});
+	this.canvas = document.createElement('canvas');
+	this.canvas.width = this.width;
+	this.canvas.height = this.height;
+	this.ycc = new Ycc().bindCanvas(this.canvas);
 	
-	// todo 在层里绘制
-
-
-	this.xAxis = new Axis({},layer,this);
-	this.canvas = canvas;
-	this.ycc = ycc;
 };
 
 /**
  * 绘制
  */
 YccCharts.prototype.render = function () {
-	this.xAxis.render();
+
+	var layer = this.ycc.layerManager.newLayer({name:"坐标轴"});
+	var axis = new Axis(layer,this);
+	axis.render();
+
 	this.ycc.layerManager.reRenderAllLayerToStage();
 };
 
@@ -106,6 +111,17 @@ YccCharts.prototype.render = function () {
  * 获取canvas
  */
 YccCharts.prototype.getCanvas = function () {
-	this.render();
 	return this.canvas;
+};
+
+
+YccCharts.prototype.extend = function (targetObj, src) {
+	var obj2 = Ycc.utils.deepClone(src);
+	for (var i in targetObj) {
+		if(!targetObj.hasOwnProperty(i)) continue;
+		if (obj2 && typeof obj2[i] !=="undefined") {
+			targetObj[i] = obj2[i];
+		}
+	}
+	return targetObj;
 };

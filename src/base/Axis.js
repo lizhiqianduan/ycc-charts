@@ -10,15 +10,34 @@ var Ycc = require('ycc-engine');
 
 module.exports = exports = Axis;
 
+
+var a = {
+	a:2,b:null
+};
+var b = {a:1,b:{c:2,d:3,e:[1,2,3]}};
+Ycc.utils.extend(a,b,true);
+
+console.log(a,b);
+
+
+
+
+
+
+
+
 /**
- *
- * @param option
- * @param layer
- * @param chart
+ * 轴线的构造函数
+ * @param layer				{Ycc.Layer}		轴线绘制的图层
+ * @param chart				{YccCharts}		轴线所属的图表
  * @constructor
  */
-function Axis(option,layer,chart) {
-	option = option || {};
+function Axis(layer,chart) {
+	/**
+	 * 计算之后的配置项
+	 * @type {{}}
+	 */
+	var option = {};
 	
 	/**
 	 * 轴线所在的图层
@@ -32,78 +51,215 @@ function Axis(option,layer,chart) {
 	this._chart = chart;
 	
 	/**
-	 * 坐标轴类型
-	 * x 		- x轴
-	 * y 		- y轴
-	 * angle	- 极坐标
-	 * @type {string}
+	 * x轴线UI
+	 * @type {null}
+	 * @private
 	 */
-	this.type 				= option.type || 'x';
-	
+	this._xLineUI = null;
+
 	/**
-	 * 是否显示
-	 * @type {boolean}
-	 */
-	this.show 				= option.show;
-	
-	/**
-	 * 刻度文字列表
-	 * @type {number[]|string[]}
-	 */
-	this.data				= option.data || [];
-	
-	/**
-	 * 每个数据在轴线上的位置
+	 * x轴的刻度UI
 	 * @type {Array}
 	 * @private
 	 */
-	this._dataPos			= [];
+	this._xStepListUI = [];
 	
 	/**
-	 * 默认的刻度值列表长度，初始时在data长度为0时使用
-	 * @type {number}
+	 * y轴线UI
+	 * @type {null}
+	 * @private
 	 */
-	this._defaultDataLen	= 8;
+	this._yLineUI = null;
 	
 	/**
-	 * 坐标轴的起点
-	 * @type {Ycc.Math.Dot}
+	 * y轴的刻度UI
+	 * @type {Array}
+	 * @private
 	 */
-	this.startDot = new Ycc.Math.Dot(20,20);
+	this._yStepListUI = [];
+	
+	
 	
 	this.init();
 }
 
 
 Axis.prototype.init = function () {
-	
-	if(this.data.length===0){
-		var map = {
-			x:'width',
-			y:'height',
-			angle:'360'
-		};
-		var step = Math.ceil(this._chart[map[this.type]]/this._defaultDataLen);
-		for(var i=1;i<=this._defaultDataLen;i++){
-			this.data.push(step*i);
-		}
-	}
+
+
 };
 
-Axis.prototype.render = function () {
-	console.log(this.layer,222);
+
+/**
+ * 渲染X轴
+ */
+Axis.prototype.renderX = function () {
+	var option = this.getOptionX();
+	if(!option) return;
 	
+	console.log('render x',option);
+	
+	// 轴线UI
 	var line = new Ycc.UI.Line({
-		start:this.startDot,
-		end:new Ycc.Math.Dot(this._chart.width,this.startDot.y)
+		start:option.startDot,
+		end:new Ycc.Math.Dot(option.width+option.startDot.x,option.startDot.y)
 	});
 	this.layer.addUI(line);
 	
-	for(var i=0;i<this.data.length;i++){
-		var x = this.data[i];
-		line.addChild(new Ycc.UI.Line({
-			start:new Ycc.Math.Dot(x,0),
-			end:new Ycc.Math.Dot(x,10)
-		}));
+	// 刻度的步长
+	var stepLen = option.width/option.data.length;
+	// 刻度的起点
+	var startX = option.startDot.x;
+	// 轴线的刻度UI
+	for(var i=0;i<option.data.length;i++){
+		// 刻度的x坐标
+		var stepX = startX+stepLen*(1+i)-option.startDot.x-option.stepStrokeWidth;
+		var stepUI = new Ycc.UI.Line({
+			start:new Ycc.Math.Dot(stepX,0),
+			end:new Ycc.Math.Dot(stepX,option.stepDeep),
+			width:option.stepStrokeWidth
+		});
+		line.addChild(stepUI);
+		this._xStepListUI.push(stepUI);
 	}
+	this._xLineUI = line;
+};
+
+/**
+ * 渲染Y轴
+ */
+Axis.prototype.renderY = function () {
+	var option = this.getOptionY();
+	if(!option) return;
+	
+	console.log('render y',option);
+	
+	// 轴线UI
+	var line = new Ycc.UI.Line({
+		start:option.startDot,
+		end:new Ycc.Math.Dot(option.startDot.x,option.width+option.startDot.y)
+	});
+	this.layer.addUI(line);
+	
+	// 刻度的步长
+	var stepLen = option.width/option.data.length;
+	// 刻度的起点
+	var startY = option.startDot.y;
+	// 轴线的刻度UI
+	for(var i=0;i<option.data.length;i++){
+		// 刻度的y坐标
+		var stepY = startY+stepLen*(1+i)-option.startDot.y-option.stepStrokeWidth;
+		var stepUI = new Ycc.UI.Line({
+			start:new Ycc.Math.Dot(0,stepY),
+			end:new Ycc.Math.Dot(option.stepDeep,stepY),
+			width:option.stepStrokeWidth
+		});
+		line.addChild(stepUI);
+		this._yStepListUI.push(stepUI);
+	}
+	this._yLineUI = line;
+};
+
+/**
+ * 整个渲染
+ */
+Axis.prototype.render = function () {
+	this.renderX();
+	this.renderY();
+};
+
+/**
+ * 获取x轴的默认配置
+ * 该配置对应于chart.option.xAxis
+ * @return {{startDot: Ycc.Math.Dot, show: boolean, data: [string], width: number, stepColor: string, stepDeep: number, stepStrokeWidth: number}}
+ */
+Axis.prototype.getDefaultOptionX = function () {
+	return {
+		/**
+		 * 坐标轴的起点
+		 * @type {Ycc.Math.Dot}
+		 */
+		startDot:new Ycc.Math.Dot(30,30),
+		/**
+		 * 是否显示
+		 * @type {boolean}
+		 */
+		show:true,
+		
+		/**
+		 * 坐标轴的长度
+		 * @type {number}
+		 */
+		width:100,
+		
+		
+		/**
+		 * 刻度文字列表
+		 * @type {number[]|string[]}
+		 */
+		data:['1'],
+		/**
+		 * 刻度的颜色值
+		 * @type {string}
+		 */
+		stepColor:'black',
+		/**
+		 * 刻度的深度
+		 * @type {number}
+		 */
+		stepDeep:10,
+		/**
+		 * 刻度线条的宽度
+		 * @TODO 此属性需要Ycc支持
+		 * @type {*|number}
+		 */
+		stepStrokeWidth:1
+	};
+};
+
+/**
+ * 获取混合后x轴的配置项
+ * @return {*}
+ */
+Axis.prototype.getOptionX = function () {
+	var chartOption = this._chart.option.xAxis;
+	if(!Ycc.utils.isObj(chartOption)) return null;
+	return this._extend(this.getDefaultOptionX(),chartOption);
+};
+
+/**
+ * 获取x轴的默认配置
+ * 该配置对应于chart.option.yAxis
+ * @return {{startDot: Ycc.Math.Dot, show: boolean, data: [string], width: number, stepColor: string, stepDeep: number, stepStrokeWidth: number}}
+ */
+Axis.prototype.getDefaultOptionY = function () {
+	return this.getDefaultOptionX();
+};
+
+/**
+ * 获取混合后y轴的配置项
+ * @return {*}
+ */
+Axis.prototype.getOptionY = function () {
+	var chartOption = this._chart.option.yAxis;
+	if(!Ycc.utils.isObj(chartOption)) return null;
+	return this._extend(this.getDefaultOptionY(),chartOption);
+};
+
+
+
+
+/**
+ * 合并轴的参数
+ * @param defaultOption
+ * @param chartOption
+ * @return {*}
+ * @private
+ */
+Axis.prototype._extend = function (defaultOption,chartOption) {
+	for(var i in defaultOption){
+		if(typeof chartOption[i]!=='undefined' && defaultOption.hasOwnProperty(i))
+			defaultOption[i] = chartOption[i];
+	}
+	return defaultOption;
 };

@@ -10,9 +10,15 @@ var YccCharts = require('../../src/index');
 var chart = new YccCharts({
 	xAxis:{
 		show:true,
-		data:[]
-	}
+		data:['a',1,'b','3']
+	},
+	yAxis:{
+		show:true,
+		data:['a',1,'b','3']
+	},
 });
 
 console.log(chart);
 document.body.appendChild(chart.getCanvas());
+
+chart.render();
