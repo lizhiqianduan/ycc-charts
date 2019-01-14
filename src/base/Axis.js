@@ -119,7 +119,15 @@ Axis.prototype.renderX = function () {
 			end:new Ycc.Math.Dot(stepX,option.stepDeep*-1),
 			width:option.stepStrokeWidth
 		});
+		
+		// 刻度上的文字UI
+		var labelUI = new Ycc.UI.SingleLineText({
+			rect:new Ycc.Math.Rect(stepX-100,option.stepDeep*-1-option.labelSize,200,option.labelSize),
+			content:option.data[i]+'',
+			xAlign:'center'
+		});
 		line.addChild(stepUI);
+		line.addChild(labelUI);
 		this._xStepListUI.push(stepUI);
 	}
 	this._xLineUI = line;
@@ -154,7 +162,14 @@ Axis.prototype.renderY = function () {
 			end:new Ycc.Math.Dot(option.stepDeep*-1,stepY),
 			width:option.stepStrokeWidth
 		});
+		// 刻度上的文字UI
+		var labelUI = new Ycc.UI.SingleLineText({
+			rect:new Ycc.Math.Rect(-200-option.stepDeep,stepY-option.labelSize/2,200,option.labelSize),
+			content:option.data[i]+'',
+			xAlign:'right'
+		});
 		line.addChild(stepUI);
+		line.addChild(labelUI);
 		this._yStepListUI.push(stepUI);
 	}
 	this._yLineUI = line;
@@ -213,7 +228,19 @@ Axis.prototype.getDefaultOptionX = function () {
 		 * @TODO 此属性需要Ycc支持
 		 * @type {*|number}
 		 */
-		stepStrokeWidth:1
+		stepStrokeWidth:1,
+		
+		/**
+		 * 刻度文字大小
+		 * @type {number}
+		 */
+		labelSize:16,
+		
+		/**
+		 * 刻度文字的颜色
+		 * @type {number}
+		 */
+		labelColor:'black'
 	};
 };
 
