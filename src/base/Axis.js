@@ -116,7 +116,7 @@ Axis.prototype.renderX = function () {
 		var stepX = startX+stepLen*(1+i)-option.startDot.x-option.stepStrokeWidth;
 		var stepUI = new Ycc.UI.Line({
 			start:new Ycc.Math.Dot(stepX,0),
-			end:new Ycc.Math.Dot(stepX,option.stepDeep),
+			end:new Ycc.Math.Dot(stepX,option.stepDeep*-1),
 			width:option.stepStrokeWidth
 		});
 		line.addChild(stepUI);
@@ -151,7 +151,7 @@ Axis.prototype.renderY = function () {
 		var stepY = startY+stepLen*(1+i)-option.startDot.y-option.stepStrokeWidth;
 		var stepUI = new Ycc.UI.Line({
 			start:new Ycc.Math.Dot(0,stepY),
-			end:new Ycc.Math.Dot(option.stepDeep,stepY),
+			end:new Ycc.Math.Dot(option.stepDeep*-1,stepY),
 			width:option.stepStrokeWidth
 		});
 		line.addChild(stepUI);
