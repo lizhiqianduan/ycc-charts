@@ -7,15 +7,24 @@
 
 var Ycc = require('ycc-engine');
 var Axis = require('./base/Axis');
+var render = require('./render/index');
 
-window.YccCharts = YccCharts;
-module.exports = exports = YccCharts;
+
+
+
 /**
  *
  * @param option				{object}
- * @param option.xAxis			{object}
- * @param option.yAxis			{object}
- * @param option.angleAxis		{object}
+ *
+ * @param option.type			{string}
+ * 图标类型
+ * line - 折线图
+ * pie	- 饼图
+ *
+ * @param option.xAxis			{Axis.OptionX}	x轴的配置项
+ *
+ * @param option.yAxis			{Axis.OptionY}	y轴的配置项
+ *
  * @constructor
  */
 function YccCharts(option) {
@@ -39,34 +48,10 @@ function YccCharts(option) {
 	this.height 	= option.height || 300;
 	
 	/**
-	 * x坐标对象
-	 * 初始时会重载对象的属性
-	 * @type {null|Axis}
+	 * 坐标轴的引用
+	 * @type {null}
 	 */
-	this.xAxis 		= option.xAxis;
-	
-	/**
-	 * y坐标对象
-	 * 初始时会重载对象的属性
-	 * @type {null|Axis}
-	 */
-	this.yAxis 		= option.yAxis;
-	
-	/**
-	 * 极坐标
-	 * @type {null|Axis}
-	 */
-	this.angleAxis 	= null;
-	
-	/**
-	 * 图标类型
-	 * line - 折线图
-	 * pie	- 饼图
-	 * 等等
-	 * @type {string}
-	 */
-	this.type		= 'line';
-	
+	this.axis		= null;
 	/**
 	 * canvas元素
 	 * @type {null}
@@ -100,10 +85,12 @@ YccCharts.prototype.init = function () {
  */
 YccCharts.prototype.render = function () {
 
-	var layer = this.ycc.layerManager.newLayer({name:"坐标轴"});
-	var axis = new Axis(layer,this);
-	axis.render();
+	this.axis = new Axis(this.ycc.layerManager.newLayer({name:"坐标轴"}),this);
+	this.axis.render();
 
+	// 渲染对应的图形
+	if(!!this.option.type) render[(this.option.type+'Render')](this);
+	
 	this.ycc.layerManager.reRenderAllLayerToStage();
 };
 
@@ -125,3 +112,6 @@ YccCharts.prototype.extend = function (targetObj, src) {
 	}
 	return targetObj;
 };
+
+window.YccCharts = YccCharts;
+module.exports = exports = YccCharts;

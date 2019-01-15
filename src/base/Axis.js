@@ -8,20 +8,6 @@
 
 var Ycc = require('ycc-engine');
 
-module.exports = exports = Axis;
-
-
-var a = {
-	a:2,b:null
-};
-var b = {a:1,b:{c:2,d:3,e:[1,2,3]}};
-Ycc.utils.extend(a,b,true);
-
-console.log(a,b);
-
-
-
-
 
 
 
@@ -65,6 +51,13 @@ function Axis(layer,chart) {
 	this._xStepListUI = [];
 	
 	/**
+	 * x轴刻度对应的文本UI
+	 * @type {Array}
+	 * @private
+	 */
+	this._xLabelListUI = [];
+	
+	/**
 	 * y轴线UI
 	 * @type {null}
 	 * @private
@@ -78,6 +71,12 @@ function Axis(layer,chart) {
 	 */
 	this._yStepListUI = [];
 	
+	/**
+	 * y轴刻度对应的文本UI
+	 * @type {Array}
+	 * @private
+	 */
+	this._yLabelListUI = [];
 	
 	
 	this.init();
@@ -92,9 +91,12 @@ Axis.prototype.init = function () {
 
 /**
  * 渲染X轴
+ * @param [setting] {OptionX}
+ * 配置项，默认由全局配置项传入，此处可以单独设置
+ * @todo 此渲染过程为离散数据的渲染，数值类型的渲染待做
  */
-Axis.prototype.renderX = function () {
-	var option = this.getOptionX();
+Axis.prototype.renderX = function (setting) {
+	var option = setting||this.getOptionX();
 	if(!option) return;
 	
 	console.log('render x',option);
@@ -129,15 +131,18 @@ Axis.prototype.renderX = function () {
 		line.addChild(stepUI);
 		line.addChild(labelUI);
 		this._xStepListUI.push(stepUI);
+		this._xLabelListUI.push(labelUI);
 	}
 	this._xLineUI = line;
 };
 
 /**
  * 渲染Y轴
+ * @param [setting] {OptionX}
+ * 配置项，默认由全局配置项传入，此处可以单独设置
  */
-Axis.prototype.renderY = function () {
-	var option = this.getOptionY();
+Axis.prototype.renderY = function (setting) {
+	var option = setting||this.getOptionY();
 	if(!option) return;
 	
 	console.log('render y',option);
@@ -171,6 +176,7 @@ Axis.prototype.renderY = function () {
 		line.addChild(stepUI);
 		line.addChild(labelUI);
 		this._yStepListUI.push(stepUI);
+		this._yLabelListUI.push(labelUI);
 	}
 	this._yLineUI = line;
 };
@@ -189,59 +195,7 @@ Axis.prototype.render = function () {
  * @return {{startDot: Ycc.Math.Dot, show: boolean, data: [string], width: number, stepColor: string, stepDeep: number, stepStrokeWidth: number}}
  */
 Axis.prototype.getDefaultOptionX = function () {
-	return {
-		/**
-		 * 坐标轴的起点
-		 * @type {Ycc.Math.Dot}
-		 */
-		startDot:new Ycc.Math.Dot(30,30),
-		/**
-		 * 是否显示
-		 * @type {boolean}
-		 */
-		show:true,
-		
-		/**
-		 * 坐标轴的长度
-		 * @type {number}
-		 */
-		width:100,
-		
-		
-		/**
-		 * 刻度文字列表
-		 * @type {number[]|string[]}
-		 */
-		data:['1'],
-		/**
-		 * 刻度的颜色值
-		 * @type {string}
-		 */
-		stepColor:'black',
-		/**
-		 * 刻度的深度
-		 * @type {number}
-		 */
-		stepDeep:10,
-		/**
-		 * 刻度线条的宽度
-		 * @TODO 此属性需要Ycc支持
-		 * @type {*|number}
-		 */
-		stepStrokeWidth:1,
-		
-		/**
-		 * 刻度文字大小
-		 * @type {number}
-		 */
-		labelSize:16,
-		
-		/**
-		 * 刻度文字的颜色
-		 * @type {number}
-		 */
-		labelColor:'black'
-	};
+	return new Axis.OptionX();
 };
 
 /**
@@ -260,7 +214,7 @@ Axis.prototype.getOptionX = function () {
  * @return {{startDot: Ycc.Math.Dot, show: boolean, data: [string], width: number, stepColor: string, stepDeep: number, stepStrokeWidth: number}}
  */
 Axis.prototype.getDefaultOptionY = function () {
-	return this.getDefaultOptionX();
+	return new Axis.OptionY();
 };
 
 /**
@@ -271,6 +225,36 @@ Axis.prototype.getOptionY = function () {
 	var chartOption = this._chart.option.yAxis;
 	if(!Ycc.utils.isObj(chartOption)) return null;
 	return this._extend(this.getDefaultOptionY(),chartOption);
+};
+
+
+/**
+ * 根据数据获取坐标系内的坐标位置
+ * @todo 适用于离散数据
+ * @param data
+ * @param data.key
+ * @param data.val
+ * @return {Ycc.Math.Dot}
+ */
+Axis.prototype.getPositionByData = function (data) {
+	var x = null,y=null,i=0;
+	
+	for(i=0;i<this._xLabelListUI.length;i++){
+		if(this._xLabelListUI[i].content===data.key+''){
+			x = this._xStepListUI[i].getAbsolutePosition().x;
+			break;
+		}
+	}
+	for(i=0;i<this._yLabelListUI.length;i++){
+		if(this._yLabelListUI[i].content===data.val+''){
+			y = this._yStepListUI[i].getAbsolutePosition().y;
+			break;
+		}
+	}
+	
+	if(x===null || y===null)
+		return console.error('can not match data in axis! maybe data is error!',data);
+	return new Ycc.Math.Dot(x,y);
 };
 
 
@@ -290,3 +274,81 @@ Axis.prototype._extend = function (defaultOption,chartOption) {
 	}
 	return defaultOption;
 };
+
+
+/**
+ * X轴的配置项
+ * @static
+ * @constructor
+ */
+Axis.OptionX = function () {
+	/**
+	 * 坐标轴的起点
+	 * @type {Ycc.Math.Dot}
+	 */
+	this.startDot=new Ycc.Math.Dot(30,30);
+	/**
+	 * 是否显示
+	 * @type {boolean}
+	 */
+	this.show=true;
+	
+	/**
+	 * 坐标轴的长度
+	 * @type {number}
+	 */
+	this.width=100;
+	
+	/**
+	 * 坐标轴类型
+	 * number - 数值轴 适合连续数值
+	 * group - 分组轴 适合离散数轴
+	 * @type {string}
+	 */
+	this.type = 'group';
+	
+	/**
+	 * 刻度文字列表
+	 * @type {number[]|string[]}
+	 */
+	this.data=['1'];
+	/**
+	 * 刻度的颜色值
+	 * @type {string}
+	 */
+	this.stepColor='black';
+	/**
+	 * 刻度的深度
+	 * @type {number}
+	 */
+	this.stepDeep=10;
+	/**
+	 * 刻度线条的宽度
+	 * @TODO 此属性需要Ycc支持
+	 * @type {*|number}
+	 */
+	this.stepStrokeWidth=1;
+	
+	/**
+	 * 刻度文字大小
+	 * @type {number}
+	 */
+	this.labelSize=16;
+	
+	/**
+	 * 刻度文字的颜色
+	 * @type {number}
+	 */
+	this.labelColor='black';
+};
+
+/**
+ * Y轴的配置项
+ * @static
+ * @constructor
+ */
+Axis.OptionY = function () {
+	Axis.OptionX.call(this);
+};
+
+module.exports = exports = Axis;

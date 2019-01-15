@@ -67,6 +67,7 @@ for(var i=0;i<demoList.length;i++){
 	config.entry[chunkName] = demoPath;
 	
 	config.plugins.push(new HtmlWebpackPlugin({
+		template:demoRootPath+'/tpl.html',
 		title: demoTitlePrefix+demoDirName,
 		filename:demoOutputDirName+'/'+demoDirName+'.html',
 		chunks:[chunkName]
