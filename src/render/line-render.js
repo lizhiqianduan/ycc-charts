@@ -21,8 +21,6 @@ function lineRender(chart) {
 		return false;
 	}
 	
-	var xData = [],
-		yData = [];
 	var posList = [];
 	for(var i=0;i<data.length;i++){
 		posList.push(chart.axis.getPositionByData(data[i]));
@@ -41,10 +39,26 @@ function lineRender(chart) {
 	
 	console.log('axis',chart.axis);
 	
-	var layer = chart.ycc.layerManager.newLayer({name:'折线图'});
+	var layer = chart.ycc.layerManager.newLayer({name:'折线图',enableEventManager:true});
 	layer.addUI(new Ycc.UI.BrokenLine({
 		pointList:posList
 	}));
+	
+	for(i=0;i<posList.length;i++){
+		var circle = new Ycc.UI.Circle({
+			point:posList[i],
+			r:5,
+			fill:false,
+			color:'green',
+		});
+		circle.addChild(new Ycc.UI.Circle({
+			point:new Ycc.Math.Dot(5,5),
+			stopEventBubbleUp:false,
+			r:4,
+			color:'white',
+		}));
+		layer.addUI(circle);
+	}
 	
 	chart.ycc.layerManager.reRenderAllLayerToStage();
 	return true;
