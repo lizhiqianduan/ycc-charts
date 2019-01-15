@@ -17,7 +17,7 @@ var chart = new YccCharts({
 	],
 	xAxis:{
 		show:true,
-		data:[1,2,5,9]
+		data:[1,2,5,9],
 	},
 	yAxis:{
 		show:true,

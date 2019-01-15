@@ -195,7 +195,9 @@ Axis.prototype.render = function () {
  * @return {{startDot: Ycc.Math.Dot, show: boolean, data: [string], width: number, stepColor: string, stepDeep: number, stepStrokeWidth: number}}
  */
 Axis.prototype.getDefaultOptionX = function () {
-	return new Axis.OptionX();
+	var option = new Axis.OptionX();
+	option.width = this._chart.ycc.getStageWidth()-option.startDot.x*2;
+	return option;
 };
 
 /**
@@ -214,7 +216,9 @@ Axis.prototype.getOptionX = function () {
  * @return {{startDot: Ycc.Math.Dot, show: boolean, data: [string], width: number, stepColor: string, stepDeep: number, stepStrokeWidth: number}}
  */
 Axis.prototype.getDefaultOptionY = function () {
-	return new Axis.OptionY();
+	var option = new Axis.OptionY();
+	option.width = this._chart.ycc.getStageWidth()-option.startDot.y*2;
+	return option;
 };
 
 /**
