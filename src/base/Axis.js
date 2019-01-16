@@ -78,6 +78,18 @@ function Axis(layer,chart) {
 	 */
 	this._yLabelListUI = [];
 	
+	/**
+	 * 坐标轴体系的正方向，根据直角坐标系四个象限顺时针生成
+	 * 1 x轴向右 y轴向上
+	 * 2 x轴向右 y轴向下
+	 * 3 x轴向左 y轴向下
+	 * 4 x轴向左 y轴向上
+	 *
+	 * 默认坐标系与原生canvas一致
+	 * @type {number}
+	 */
+	this.direction = 1;
+	
 	
 	this.init();
 }
@@ -88,6 +100,33 @@ Axis.prototype.init = function () {
 
 };
 
+/**
+ * 获取坐标系内某个点相对于舞台的绝对坐标
+ * @param dot {Ycc.Math.Dot}	该点的
+ * @return {Ycc.Math.Dot}
+ */
+Axis.prototype.getAbsoluteDot = function (dot) {
+	var newDot = new Ycc.Math.Dot(dot);
+	var stageW = this._chart.ycc.getStageWidth();
+	var stageH = this._chart.ycc.getStageHeight();
+	if(this.direction===2)
+		return newDot;
+	
+	if(this.direction===1){
+		newDot.y = stageH-dot.y;
+		return newDot;
+	}
+	
+	if(this.direction===3){
+		newDot.x = stageW-dot.x;
+		return newDot;
+	}
+	if(this.direction===4){
+		newDot.y = stageH-dot.y;
+		newDot.x = stageW-dot.x;
+		return newDot;
+	}
+};
 
 /**
  * 渲染X轴
@@ -101,39 +140,52 @@ Axis.prototype.renderX = function (setting) {
 	
 	console.log('render x',option);
 	
+	var startDot = this.getAbsoluteDot(option.startDot);
+	var endDot = this.getAbsoluteDot(new Ycc.Math.Dot(option.width+option.startDot.x,option.startDot.y));
+	
+	
 	// 轴线UI
 	var line = new Ycc.UI.Line({
-		start:option.startDot,
-		end:new Ycc.Math.Dot(option.width+option.startDot.x,option.startDot.y)
+		start:startDot,
+		end:endDot
 	});
 	this.layer.addUI(line);
+
 	
+	////////////// 下面绘制刻度相关
+	//// 刻度线和文字 都是轴线的子节点
+	
+	// 轴线是否从左至右
+	var positive = startDot.x<=endDot.x;
 	// 刻度的步长
 	var stepLen = option.width/option.data.length;
-	// 刻度的起点
-	var startX = option.startDot.x;
+	// 刻度的朝向，1向下，-1向上
+	var stepDirection = [1,4].indexOf(this.direction)===-1?-1:1;
 	// 轴线的刻度UI
 	for(var i=0;i<option.data.length;i++){
 		// 刻度的x坐标
-		var stepX = startX+stepLen*(1+i)-option.startDot.x-option.stepStrokeWidth;
+		var stepX = positive?stepLen*(1+i):option.width-stepLen*(1+i);
 		var stepUI = new Ycc.UI.Line({
 			start:new Ycc.Math.Dot(stepX,0),
-			end:new Ycc.Math.Dot(stepX,option.stepDeep*-1),
+			end:new Ycc.Math.Dot(stepX,option.stepDeep*stepDirection),
 			width:option.stepStrokeWidth
 		});
 		
 		// 刻度上的文字UI
 		var labelUI = new Ycc.UI.SingleLineText({
-			rect:new Ycc.Math.Rect(stepX-100,option.stepDeep*-1-option.labelSize,200,option.labelSize),
+			rect:new Ycc.Math.Rect(stepX-100,option.stepDeep*stepDirection-(stepDirection===1?0:option.labelSize),200,option.labelSize),
 			content:option.data[i]+'',
 			xAlign:'center'
 		});
+		
 		line.addChild(stepUI);
 		line.addChild(labelUI);
 		this._xStepListUI.push(stepUI);
 		this._xLabelListUI.push(labelUI);
 	}
 	this._xLineUI = line;
+	
+	
 };
 
 /**
@@ -147,32 +199,46 @@ Axis.prototype.renderY = function (setting) {
 	
 	console.log('render y',option);
 	
+	
+	var startDot = this.getAbsoluteDot(option.startDot);
+	var endDot = this.getAbsoluteDot(new Ycc.Math.Dot(option.startDot.x,option.width+option.startDot.y));
+	
+	
 	// 轴线UI
 	var line = new Ycc.UI.Line({
-		start:option.startDot,
-		end:new Ycc.Math.Dot(option.startDot.x,option.width+option.startDot.y)
+		start:startDot,
+		end:endDot
 	});
 	this.layer.addUI(line);
+
+
+	////////////// 下面绘制刻度相关
+	//// 刻度线和文字 都是轴线的子节点
 	
+	// 轴线是否从上至下
+	var positive = startDot.y<=endDot.y;
 	// 刻度的步长
 	var stepLen = option.width/option.data.length;
-	// 刻度的起点
-	var startY = option.startDot.y;
+	// 刻度的朝向，1向右，-1向左
+	var stepDirection = [1,2].indexOf(this.direction)!==-1?-1:1;
+	
 	// 轴线的刻度UI
 	for(var i=0;i<option.data.length;i++){
-		// 刻度的y坐标
-		var stepY = startY+stepLen*(1+i)-option.startDot.y-option.stepStrokeWidth;
+		// 刻度的x坐标
+		var stepY = positive?stepLen*(1+i):option.width-stepLen*(1+i);
 		var stepUI = new Ycc.UI.Line({
 			start:new Ycc.Math.Dot(0,stepY),
-			end:new Ycc.Math.Dot(option.stepDeep*-1,stepY),
+			end:new Ycc.Math.Dot(option.stepDeep*stepDirection,stepY),
 			width:option.stepStrokeWidth
 		});
+		
 		// 刻度上的文字UI
 		var labelUI = new Ycc.UI.SingleLineText({
-			rect:new Ycc.Math.Rect(-200-option.stepDeep,stepY-option.labelSize/2,200,option.labelSize),
+			rect:new Ycc.Math.Rect(stepDirection===1?option.stepDeep:(-200-option.stepDeep),stepY-option.labelSize/2,200,option.labelSize),
 			content:option.data[i]+'',
-			xAlign:'right'
+			xAlign:stepDirection===1?'left':'right'
 		});
+		
 		line.addChild(stepUI);
 		line.addChild(labelUI);
 		this._yStepListUI.push(stepUI);
@@ -202,7 +268,7 @@ Axis.prototype.getDefaultOptionX = function () {
 
 /**
  * 获取混合后x轴的配置项
- * @return {*}
+ * @return {Axis.OptionX}
  */
 Axis.prototype.getOptionX = function () {
 	var chartOption = this._chart.option.xAxis;
@@ -288,6 +354,7 @@ Axis.prototype._extend = function (defaultOption,chartOption) {
 Axis.OptionX = function () {
 	/**
 	 * 坐标轴的起点
+	 * 此坐标为相对坐标，相对于坐标系的方向direction参数
 	 * @type {Ycc.Math.Dot}
 	 */
 	this.startDot=new Ycc.Math.Dot(30,30);
@@ -306,7 +373,7 @@ Axis.OptionX = function () {
 	/**
 	 * 坐标轴类型
 	 * number - 数值轴 适合连续数值
-	 * group - 分组轴 适合离散数轴
+	 * group - 分组轴 适合离散数轴，此时必须设置刻度的文字列表data
 	 * @type {string}
 	 */
 	this.type = 'group';
